@@ -4,10 +4,10 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-class UnderGlowManager
+class UnderglowManager
 {
 public:
-	UnderGlowManager();
+	UnderglowManager();
 	void setup();
 	void setColor(CRGB color);
 

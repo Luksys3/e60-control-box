@@ -4,7 +4,7 @@
 #include "DallasTemperature.h"
 
 #include "SDCardStorage.h"
-#include "UnderGlowManager.h"
+#include "UnderglowManager.h"
 
 const int ONE_WIRE_BUS = A14;
 
@@ -37,7 +37,7 @@ const int SD_CARD_CHIP_SELECT = 10;
 
 SDCardStorage storage(10); // CS pin 10
 
-UnderGlowManager underGlow;
+UnderglowManager underglow;
 
 void setup()
 {
@@ -46,7 +46,7 @@ void setup()
 	Serial1.begin(115200); // UART1 for KT6368A
 	Serial1.println("AT+NAME=E60");
 
-	underGlow.setup();
+	underglow.setup();
 
 	pinMode(EXHAUST_PIN, OUTPUT);
 	pinMode(REGULATOR_PIN, OUTPUT);
