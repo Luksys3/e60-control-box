@@ -5,6 +5,8 @@
 
 #include "SDCardStorage.h"
 #include "UnderglowManager.h"
+#include "DisplayManager.h"
+#include "OBDReader.h"
 
 const int ONE_WIRE_BUS = A14;
 
@@ -24,8 +26,6 @@ const int BUTTON_LED_6 = 25;
 const int BUTTON_1 = 6;
 const int BUTTON_2 = 7;
 const int BUTTON_3 = 12;
-const int BUTTON_4 = 20;
-const int BUTTON_5 = 21;
 const int BUTTON_6 = 22;
 
 const int EXHAUST_PIN = 40;
@@ -38,6 +38,10 @@ const int SD_CARD_CHIP_SELECT = 10;
 SDCardStorage storage(10); // CS pin 10
 
 UnderglowManager underglow;
+DisplayManager displayManager;
+OBDReader obdReader;
+
+#define BUZZER_PIN A1
 
 void setup()
 {
@@ -46,7 +50,18 @@ void setup()
 	Serial1.begin(115200); // UART1 for KT6368A
 	Serial1.println("AT+NAME=E60");
 
+	pinMode(10, OUTPUT);
+	pinMode(4, OUTPUT);
+	digitalWrite(10, HIGH);
+	digitalWrite(4, HIGH);
+
 	underglow.setup();
+	displayManager.setup();
+	obdReader.setup();
+	digitalWrite(10, HIGH);
+	digitalWrite(4, HIGH);
+
+	pinMode(BUZZER_PIN, OUTPUT);
 
 	pinMode(EXHAUST_PIN, OUTPUT);
 	pinMode(REGULATOR_PIN, OUTPUT);
@@ -63,8 +78,6 @@ void setup()
 	pinMode(BUTTON_1, INPUT_PULLUP);
 	pinMode(BUTTON_2, INPUT_PULLUP);
 	pinMode(BUTTON_3, INPUT_PULLUP);
-	pinMode(BUTTON_4, INPUT_PULLUP);
-	pinMode(BUTTON_5, INPUT_PULLUP);
 	pinMode(BUTTON_6, INPUT_PULLUP);
 
 	if (storage.begin())
@@ -87,7 +100,8 @@ void setup()
 }
 
 int inds = 0;
-bool exhaust_on = false;
+bool regulator_on = false;
+bool underglow_on = false;
 
 void loop()
 {
@@ -99,17 +113,34 @@ void loop()
 
 		if (c == 'e')
 		{
-			exhaust_on = true;
+			regulator_on = true;
+			tone(BUZZER_PIN, 1000, 50);
+			tone(BUZZER_PIN, 2000, 50);
 		}
 		if (c == 'r')
 		{
-			exhaust_on = false;
+			regulator_on = false;
+			tone(BUZZER_PIN, 1000, 50);
+			tone(BUZZER_PIN, 200, 50);
+		}
+
+		if (c == 't')
+		{
+			underglow_on = true;
+			tone(BUZZER_PIN, 1000, 100);
+			tone(BUZZER_PIN, 2000, 100);
+		}
+		if (c == 'y')
+		{
+			underglow_on = false;
+			tone(BUZZER_PIN, 1000, 100);
+			tone(BUZZER_PIN, 200, 100);
 		}
 	}
 
-	digitalWrite(EXHAUST_PIN, LOW); // exhaust_on ? HIGH : LOW);
-	digitalWrite(REGULATOR_PIN, exhaust_on ? HIGH : LOW);
-	digitalWrite(OUTSIDE_LEDS_PIN, LOW);
+	digitalWrite(EXHAUST_PIN, LOW);
+	digitalWrite(REGULATOR_PIN, regulator_on ? HIGH : LOW);
+	digitalWrite(OUTSIDE_LEDS_PIN, underglow_on ? HIGH : LOW);
 	digitalWrite(INSIDE_LEDS_PIN, LOW);
 
 	// Send the command for all devices on the bus to perform a temperature conversion:
@@ -131,6 +162,5 @@ void loop()
 	Serial.print(" \xC2\xB0"); // shows degree symbol
 	Serial.println(inds++);
 
-	// Wait 1 second:
-	delay(1000);
+	displayManager.setTemperature(tempC);
 }
